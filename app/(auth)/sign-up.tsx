@@ -9,12 +9,14 @@ import {
   ActivityIndicator,
   ScrollView,
   Alert,
+  StyleSheet,
 } from 'react-native';
 import { router, Link } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import useAuthStore from '@/store/authStore';
 
 const schema = z.object({
@@ -57,28 +59,43 @@ export default function SignUpScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-surface"
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        <View className="flex-1 px-6 pt-14 pb-8">
-          <View className="items-center mb-8">
-            <View className="bg-primary w-16 h-16 rounded-2xl items-center justify-center mb-4">
-              <Ionicons name="school" size={32} color="white" />
-            </View>
-            <Text className="text-primary text-3xl font-bold">Create Account</Text>
-            <Text className="text-muted text-base mt-1">Start your learning journey today</Text>
+      {/* Navy Hero Header */}
+      <SafeAreaView style={styles.hero} edges={['top']}>
+        <View style={styles.heroContent}>
+          <View style={styles.logoCircle}>
+            <Ionicons name="school" size={36} color="#1E3A5F" />
           </View>
+          <Text style={styles.appName}>Join EduLearn</Text>
+          <Text style={styles.tagline}>Start your learning journey today</Text>
+        </View>
+      </SafeAreaView>
 
-          <View className="gap-4">
-            <View>
-              <Text className="text-primary font-semibold mb-1.5 text-sm">Username</Text>
-              <Controller
-                control={control}
-                name="username"
-                render={({ field: { onChange, onBlur, value } }) => (
+      {/* White Form Sheet */}
+      <ScrollView
+        style={styles.formSheet}
+        contentContainerStyle={styles.formContent}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.formTitle}>Create account</Text>
+        <Text style={styles.formSubtitle}>Fill in the details to get started</Text>
+
+        <View style={styles.fields}>
+          {/* Username */}
+          <View>
+            <Text style={styles.label}>Username</Text>
+            <Controller
+              control={control}
+              name="username"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={[styles.inputWrapper, errors.username && styles.inputError]}>
+                  <Ionicons name="person-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
                   <TextInput
-                    className="bg-card border border-border rounded-xl px-4 py-3.5 text-primary"
+                    style={styles.input}
                     placeholder="johndoe"
                     placeholderTextColor="#94A3B8"
                     autoCapitalize="none"
@@ -86,21 +103,23 @@ export default function SignUpScreen() {
                     onBlur={onBlur}
                     onChangeText={onChange}
                   />
-                )}
-              />
-              {errors.username && (
-                <Text className="text-error text-xs mt-1">{errors.username.message}</Text>
+                </View>
               )}
-            </View>
+            />
+            {errors.username && <Text style={styles.errorText}>{errors.username.message}</Text>}
+          </View>
 
-            <View>
-              <Text className="text-primary font-semibold mb-1.5 text-sm">Email</Text>
-              <Controller
-                control={control}
-                name="email"
-                render={({ field: { onChange, onBlur, value } }) => (
+          {/* Email */}
+          <View>
+            <Text style={styles.label}>Email address</Text>
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={[styles.inputWrapper, errors.email && styles.inputError]}>
+                  <Ionicons name="mail-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
                   <TextInput
-                    className="bg-card border border-border rounded-xl px-4 py-3.5 text-primary"
+                    style={styles.input}
                     placeholder="you@example.com"
                     placeholderTextColor="#94A3B8"
                     keyboardType="email-address"
@@ -109,48 +128,50 @@ export default function SignUpScreen() {
                     onBlur={onBlur}
                     onChangeText={onChange}
                   />
-                )}
-              />
-              {errors.email && (
-                <Text className="text-error text-xs mt-1">{errors.email.message}</Text>
+                </View>
               )}
-            </View>
+            />
+            {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
+          </View>
 
-            <View>
-              <Text className="text-primary font-semibold mb-1.5 text-sm">Password</Text>
-              <Controller
-                control={control}
-                name="password"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <View className="bg-card border border-border rounded-xl flex-row items-center px-4">
-                    <TextInput
-                      className="flex-1 py-3.5 text-primary"
-                      placeholder="Min. 8 characters"
-                      placeholderTextColor="#94A3B8"
-                      secureTextEntry={!showPassword}
-                      value={value}
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                    />
-                    <TouchableOpacity onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
-                      <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#64748B" />
-                    </TouchableOpacity>
-                  </View>
-                )}
-              />
-              {errors.password && (
-                <Text className="text-error text-xs mt-1">{errors.password.message}</Text>
-              )}
-            </View>
-
-            <View>
-              <Text className="text-primary font-semibold mb-1.5 text-sm">Confirm Password</Text>
-              <Controller
-                control={control}
-                name="confirmPassword"
-                render={({ field: { onChange, onBlur, value } }) => (
+          {/* Password */}
+          <View>
+            <Text style={styles.label}>Password</Text>
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={[styles.inputWrapper, errors.password && styles.inputError]}>
+                  <Ionicons name="lock-closed-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
                   <TextInput
-                    className="bg-card border border-border rounded-xl px-4 py-3.5 text-primary"
+                    style={styles.input}
+                    placeholder="Min. 8 characters"
+                    placeholderTextColor="#94A3B8"
+                    secureTextEntry={!showPassword}
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
+                    <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#94A3B8" />
+                  </TouchableOpacity>
+                </View>
+              )}
+            />
+            {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
+          </View>
+
+          {/* Confirm Password */}
+          <View>
+            <Text style={styles.label}>Confirm password</Text>
+            <Controller
+              control={control}
+              name="confirmPassword"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={[styles.inputWrapper, errors.confirmPassword && styles.inputError]}>
+                  <Ionicons name="shield-checkmark-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
                     placeholder="Repeat your password"
                     placeholderTextColor="#94A3B8"
                     secureTextEntry
@@ -158,34 +179,172 @@ export default function SignUpScreen() {
                     onBlur={onBlur}
                     onChangeText={onChange}
                   />
-                )}
-              />
-              {errors.confirmPassword && (
-                <Text className="text-error text-xs mt-1">{errors.confirmPassword.message}</Text>
+                </View>
               )}
-            </View>
+            />
+            {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>}
+          </View>
 
-            <TouchableOpacity
-              className="bg-primary rounded-xl py-4 items-center mt-2"
-              onPress={handleSubmit(onSubmit)}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="text-white font-bold text-base">Create Account</Text>
-              )}
-            </TouchableOpacity>
+          {/* Create Account Button */}
+          <TouchableOpacity
+            style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+            onPress={handleSubmit(onSubmit)}
+            disabled={isLoading}
+            activeOpacity={0.85}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#1E3A5F" />
+            ) : (
+              <Text style={styles.submitButtonText}>Create Account</Text>
+            )}
+          </TouchableOpacity>
 
-            <View className="flex-row justify-center mt-2">
-              <Text className="text-muted">Already have an account? </Text>
-              <Link href="/(auth)/sign-in">
-                <Text className="text-primary font-semibold">Sign In</Text>
-              </Link>
-            </View>
+          {/* Sign In Link */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Already have an account? </Text>
+            <Link href="/(auth)/sign-in" asChild>
+              <TouchableOpacity>
+                <Text style={styles.footerLink}>Sign in</Text>
+              </TouchableOpacity>
+            </Link>
           </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1E3A5F',
+  },
+  hero: {
+    backgroundColor: '#1E3A5F',
+  },
+  heroContent: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 24,
+  },
+  logoCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  appName: {
+    color: '#FFFFFF',
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  tagline: {
+    color: 'rgba(255,255,255,0.65)',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  formSheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    flex: 1,
+  },
+  formContent: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 40,
+    flexGrow: 1,
+  },
+  formTitle: {
+    color: '#1E3A5F',
+    fontSize: 22,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  formSubtitle: {
+    color: '#64748B',
+    fontSize: 14,
+    marginBottom: 24,
+  },
+  fields: {
+    gap: 14,
+  },
+  label: {
+    color: '#1E3A5F',
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 2,
+    gap: 10,
+  },
+  inputError: {
+    borderColor: '#EF4444',
+  },
+  inputIcon: {
+    flexShrink: 0,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#1E3A5F',
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  submitButton: {
+    backgroundColor: '#F59E0B',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 6,
+    elevation: 4,
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  submitButtonDisabled: {
+    opacity: 0.7,
+  },
+  submitButtonText: {
+    color: '#1E3A5F',
+    fontWeight: '800',
+    fontSize: 16,
+    letterSpacing: 0.3,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  footerText: {
+    color: '#64748B',
+    fontSize: 14,
+  },
+  footerLink: {
+    color: '#1E3A5F',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+});
