@@ -6,6 +6,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -15,6 +16,13 @@ import { router } from 'expo-router';
 import useAuthStore from '@/store/authStore';
 import useCourseStore from '@/store/courseStore';
 import { authService } from '@/services/auth';
+
+const MENU_ITEMS = [
+  { icon: 'person-outline' as const, label: 'Edit Profile', desc: 'Update your information' },
+  { icon: 'notifications-outline' as const, label: 'Notifications', desc: 'Manage alerts' },
+  { icon: 'shield-outline' as const, label: 'Privacy & Security', desc: 'Account protection' },
+  { icon: 'help-circle-outline' as const, label: 'Help & Support', desc: 'Get assistance' },
+];
 
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
@@ -77,99 +85,282 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-        <View className="px-5 pt-4 pb-2">
-          <Text className="text-primary text-2xl font-bold">Profile</Text>
+    <View style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        {/* Navy Profile Header */}
+        <SafeAreaView style={styles.header} edges={['top']}>
+          <View style={styles.headerContent}>
+            <TouchableOpacity onPress={handleUpdateAvatar} style={styles.avatarTouchable}>
+              <Image
+                source={{ uri: user?.avatar || 'https://i.pravatar.cc/120' }}
+                style={styles.avatar}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+              />
+              {uploadingAvatar ? (
+                <View style={styles.avatarOverlay}>
+                  <ActivityIndicator color="white" size="small" />
+                </View>
+              ) : (
+                <View style={styles.cameraBtn}>
+                  <Ionicons name="camera" size={13} color="#1E3A5F" />
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <Text style={styles.userName}>{user?.fullName ?? user?.username ?? 'User'}</Text>
+            <Text style={styles.userEmail}>{user?.email ?? ''}</Text>
+            <View style={styles.roleBadge}>
+              <Text style={styles.roleText}>{user?.role ?? 'Student'}</Text>
+            </View>
+          </View>
+        </SafeAreaView>
+
+        {/* Stats Cards — overlapping the header */}
+        <View style={styles.statsRow}>
+          {[
+            { icon: 'book-outline' as const, label: 'Enrolled', value: String(enrolledCourses.length), color: '#3B82F6', bg: '#EFF6FF' },
+            { icon: 'bookmark-outline' as const, label: 'Saved', value: String(bookmarks.length), color: '#F59E0B', bg: '#FFFBEB' },
+            { icon: 'trending-up-outline' as const, label: 'Progress', value: '0%', color: '#10B981', bg: '#D1FAE5' },
+          ].map((item) => (
+            <View key={item.label} style={styles.statCard}>
+              <View style={[styles.statIcon, { backgroundColor: item.bg }]}>
+                <Ionicons name={item.icon} size={20} color={item.color} />
+              </View>
+              <Text style={styles.statValue}>{item.value}</Text>
+              <Text style={styles.statLabel}>{item.label}</Text>
+            </View>
+          ))}
         </View>
 
-        <View className="items-center py-6 px-5">
-          <TouchableOpacity onPress={handleUpdateAvatar} className="relative">
-            <Image
-              source={{ uri: user?.avatar || 'https://i.pravatar.cc/120' }}
-              style={{ width: 100, height: 100, borderRadius: 50 }}
-              contentFit="cover"
-              cachePolicy="memory-disk"
-            />
-            {uploadingAvatar ? (
-              <View className="absolute inset-0 bg-black/50 rounded-full items-center justify-center">
-                <ActivityIndicator color="white" />
-              </View>
-            ) : (
-              <View className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 border-2 border-white">
-                <Ionicons name="camera" size={14} color="white" />
-              </View>
-            )}
-          </TouchableOpacity>
-
-          <Text className="text-primary text-xl font-bold mt-3">{user?.fullName ?? user?.username ?? 'User'}</Text>
-          <Text className="text-muted text-sm mt-0.5">{user?.email}</Text>
-          <View className="bg-primary/10 px-3 py-1 rounded-full mt-2">
-            <Text className="text-primary text-xs font-semibold capitalize">{user?.role ?? 'student'}</Text>
+        {/* Account Menu */}
+        <View style={styles.menuSection}>
+          <Text style={styles.menuSectionTitle}>Account</Text>
+          <View style={styles.menuCard}>
+            {MENU_ITEMS.map((item, index) => (
+              <React.Fragment key={item.label}>
+                <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
+                  <View style={styles.menuIconWrapper}>
+                    <Ionicons name={item.icon} size={20} color="#1E3A5F" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.menuLabel}>{item.label}</Text>
+                    <Text style={styles.menuDesc}>{item.desc}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#CBD5E1" />
+                </TouchableOpacity>
+                {index < MENU_ITEMS.length - 1 && <View style={styles.divider} />}
+              </React.Fragment>
+            ))}
           </View>
         </View>
 
-        <View className="mx-5 bg-card rounded-2xl border border-border p-4 mb-4">
-          <Text className="text-primary font-bold mb-3">Learning Stats</Text>
-          <View className="flex-row justify-around">
-            <View className="items-center">
-              <Text className="text-primary text-2xl font-bold">{enrolledCourses.length}</Text>
-              <Text className="text-muted text-xs mt-0.5">Enrolled</Text>
-            </View>
-            <View className="w-px bg-border" />
-            <View className="items-center">
-              <Text className="text-primary text-2xl font-bold">{bookmarks.length}</Text>
-              <Text className="text-muted text-xs mt-0.5">Bookmarked</Text>
-            </View>
-            <View className="w-px bg-border" />
-            <View className="items-center">
-              <Text className="text-primary text-2xl font-bold">0%</Text>
-              <Text className="text-muted text-xs mt-0.5">Progress</Text>
-            </View>
-          </View>
-        </View>
-
-        <View className="mx-5 bg-card rounded-2xl border border-border overflow-hidden mb-4">
-          <TouchableOpacity className="flex-row items-center px-4 py-4 gap-3">
-            <View className="bg-primary/10 w-9 h-9 rounded-lg items-center justify-center">
-              <Ionicons name="person-outline" size={18} color="#1E3A5F" />
-            </View>
-            <Text className="text-primary font-medium flex-1">Edit Profile</Text>
-            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-          </TouchableOpacity>
-          <View className="h-px bg-border mx-4" />
-          <TouchableOpacity className="flex-row items-center px-4 py-4 gap-3">
-            <View className="bg-primary/10 w-9 h-9 rounded-lg items-center justify-center">
-              <Ionicons name="notifications-outline" size={18} color="#1E3A5F" />
-            </View>
-            <Text className="text-primary font-medium flex-1">Notifications</Text>
-            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-          </TouchableOpacity>
-          <View className="h-px bg-border mx-4" />
-          <TouchableOpacity className="flex-row items-center px-4 py-4 gap-3">
-            <View className="bg-primary/10 w-9 h-9 rounded-lg items-center justify-center">
-              <Ionicons name="shield-outline" size={18} color="#1E3A5F" />
-            </View>
-            <Text className="text-primary font-medium flex-1">Privacy & Security</Text>
-            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-          </TouchableOpacity>
-        </View>
-
-        <View className="mx-5">
+        {/* Sign Out */}
+        <View style={styles.signOutSection}>
           <TouchableOpacity
-            className="bg-error/10 rounded-2xl py-4 px-5 flex-row items-center gap-3"
+            style={styles.signOutBtn}
             onPress={handleLogout}
             disabled={isLoggingOut}
+            activeOpacity={0.8}
           >
             {isLoggingOut ? (
               <ActivityIndicator color="#EF4444" />
             ) : (
-              <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+              <>
+                <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+                <Text style={styles.signOutText}>Sign Out</Text>
+              </>
             )}
-            <Text className="text-error font-semibold text-base">Sign Out</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  scroll: {
+    paddingBottom: 32,
+  },
+  header: {
+    backgroundColor: '#1E3A5F',
+  },
+  headerContent: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 36,
+  },
+  avatarTouchable: {
+    position: 'relative',
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  avatarOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 44,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cameraBtn: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#1E3A5F',
+  },
+  userName: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  userEmail: {
+    color: 'rgba(255,255,255,0.65)',
+    fontSize: 13,
+    marginBottom: 10,
+  },
+  roleBadge: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  roleText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    marginHorizontal: 20,
+    marginTop: -18,
+    gap: 12,
+    marginBottom: 24,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#1E3A5F',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  statValue: {
+    color: '#1E3A5F',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  statLabel: {
+    color: '#94A3B8',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  menuSection: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  menuSectionTitle: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  menuCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#1E3A5F',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  menuIconWrapper: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuLabel: {
+    color: '#1E3A5F',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  menuDesc: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginTop: 1,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginHorizontal: 16,
+  },
+  signOutSection: {
+    paddingHorizontal: 20,
+  },
+  signOutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 14,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  signOutText: {
+    color: '#EF4444',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+});

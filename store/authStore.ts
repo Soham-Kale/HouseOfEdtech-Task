@@ -13,6 +13,15 @@ interface AuthActions {
   clearError: () => void;
 }
 
+// freeapi.app returns avatar as { url, publicId } — normalize it to a plain string URL.
+function normalizeUser(raw: any): User {
+  const avatar = raw?.avatar;
+  return {
+    ...raw,
+    avatar: typeof avatar === 'object' && avatar !== null ? (avatar.url ?? '') : (avatar ?? ''),
+  };
+}
+
 const useAuthStore = create<AuthState & AuthActions>((set) => ({
   user: null,
   accessToken: null,
@@ -27,7 +36,7 @@ const useAuthStore = create<AuthState & AuthActions>((set) => ({
       const userRaw = await SecureStore.getItemAsync(SECURE_KEYS.USER_DATA);
 
       if (token && userRaw) {
-        const user: User = JSON.parse(userRaw);
+        const user = normalizeUser(JSON.parse(userRaw));
         set({ user, accessToken: token, isAuthenticated: true });
       }
     } catch {
@@ -40,7 +49,8 @@ const useAuthStore = create<AuthState & AuthActions>((set) => ({
 
   login: async (email, password) => {
     const response = await authService.login({ email, password });
-    const { user, accessToken, refreshToken } = response.data;
+    const { user: rawUser, accessToken, refreshToken } = response.data;
+    const user = normalizeUser(rawUser);
 
     await SecureStore.setItemAsync(SECURE_KEYS.ACCESS_TOKEN, accessToken);
     await SecureStore.setItemAsync(SECURE_KEYS.REFRESH_TOKEN, refreshToken);
