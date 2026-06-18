@@ -1,5 +1,5 @@
 import React, { memo, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -29,66 +29,197 @@ const CourseCard = memo(({ course }: Props) => {
     ? `${course.instructor.firstName} ${course.instructor.lastName}`.trim()
     : 'Unknown Instructor';
 
-  return (
-    <Pressable
-      onPress={handlePress}
-      className="bg-card rounded-2xl mb-4 shadow-sm overflow-hidden border border-border"
-    >
-      <Image
-        source={{ uri: course.thumbnail }}
-        style={{ width: '100%', height: 160 }}
-        contentFit="cover"
-        transition={200}
-        cachePolicy="memory-disk"
-      />
+  const discountedPrice =
+    course.discountPercentage > 0
+      ? course.price * (1 - course.discountPercentage / 100)
+      : course.price;
 
-      <View className="p-3">
-        <View className="flex-row items-center justify-between mb-1">
-          <View className="bg-primary/10 px-2 py-0.5 rounded-full">
-            <Text className="text-primary text-xs font-medium capitalize">{course.category}</Text>
-          </View>
-          <TouchableOpacity onPress={handleBookmark} hitSlop={8} accessibilityLabel="Bookmark course">
-            <Ionicons
-              name={course.isBookmarked ? 'bookmark' : 'bookmark-outline'}
-              size={20}
-              color={course.isBookmarked ? '#F59E0B' : '#64748B'}
-            />
-          </TouchableOpacity>
+  return (
+    <Pressable onPress={handlePress} style={styles.card}>
+      {/* Thumbnail with overlays */}
+      <View style={styles.imageContainer}>
+        <Image
+          source={{ uri: course.thumbnail }}
+          style={styles.image}
+          contentFit="cover"
+          transition={300}
+          cachePolicy="memory-disk"
+        />
+
+        {/* Category badge — bottom-left */}
+        <View style={styles.categoryBadge}>
+          <Text style={styles.categoryText}>{course.category}</Text>
         </View>
 
-        <Text className="text-primary font-bold text-base mb-1" numberOfLines={2}>
+        {/* Bookmark — top-right */}
+        <TouchableOpacity
+          onPress={handleBookmark}
+          hitSlop={8}
+          accessibilityLabel="Bookmark course"
+          style={styles.bookmarkButton}
+        >
+          <Ionicons
+            name={course.isBookmarked ? 'bookmark' : 'bookmark-outline'}
+            size={18}
+            color={course.isBookmarked ? '#F59E0B' : '#64748B'}
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* Card body */}
+      <View style={styles.body}>
+        <Text style={styles.title} numberOfLines={2}>
           {course.title}
         </Text>
 
-        <Text className="text-muted text-xs mb-2" numberOfLines={2}>
-          {course.description}
-        </Text>
-
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center gap-1.5">
-            <Image
-              source={{ uri: course.instructor?.image || 'https://i.pravatar.cc/40' }}
-              style={{ width: 24, height: 24, borderRadius: 12 }}
-              contentFit="cover"
-              cachePolicy="memory-disk"
-            />
-            <Text className="text-muted text-xs">{instructorName}</Text>
+        {/* Rating + Price */}
+        <View style={styles.ratingRow}>
+          <View style={styles.ratingLeft}>
+            <Ionicons name="star" size={13} color="#F59E0B" />
+            <Text style={styles.ratingText}>{course.rating?.toFixed(1) ?? '4.5'}</Text>
+            <Text style={styles.reviewCount}>({course.stock ?? 0})</Text>
           </View>
-          <View className="flex-row items-center gap-1">
-            <Ionicons name="star" size={12} color="#F59E0B" />
-            <Text className="text-muted text-xs">{course.rating?.toFixed(1) ?? '4.5'}</Text>
-          </View>
+          <Text style={styles.price}>${discountedPrice.toFixed(2)}</Text>
         </View>
 
-        {course.isEnrolled && (
-          <View className="mt-2 bg-success/10 rounded-lg px-2 py-1 flex-row items-center gap-1">
-            <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-            <Text className="text-success text-xs font-medium">Enrolled</Text>
-          </View>
-        )}
+        {/* Instructor + Enrolled badge */}
+        <View style={styles.instructorRow}>
+          <Image
+            source={{ uri: course.instructor?.image || 'https://i.pravatar.cc/40' }}
+            style={styles.instructorAvatar}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+          />
+          <Text style={styles.instructorName} numberOfLines={1}>
+            {instructorName}
+          </Text>
+          {course.isEnrolled && (
+            <View style={styles.enrolledBadge}>
+              <Ionicons name="checkmark-circle" size={12} color="#10B981" />
+              <Text style={styles.enrolledText}>Enrolled</Text>
+            </View>
+          )}
+        </View>
       </View>
     </Pressable>
   );
+});
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#1E3A5F',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  imageContainer: {
+    height: 200,
+    position: 'relative',
+  },
+  image: {
+    width: '100%',
+    height: 200,
+  },
+  categoryBadge: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    backgroundColor: 'rgba(0,0,0,0.58)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  categoryText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  bookmarkButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+  },
+  body: {
+    padding: 14,
+  },
+  title: {
+    color: '#1E3A5F',
+    fontWeight: '700',
+    fontSize: 15,
+    marginBottom: 8,
+    lineHeight: 21,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  ratingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  ratingText: {
+    color: '#1E3A5F',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  reviewCount: {
+    color: '#94A3B8',
+    fontSize: 12,
+  },
+  price: {
+    color: '#F59E0B',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  instructorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  instructorAvatar: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+  },
+  instructorName: {
+    color: '#64748B',
+    fontSize: 12,
+    flex: 1,
+  },
+  enrolledBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 3,
+  },
+  enrolledText: {
+    color: '#10B981',
+    fontSize: 11,
+    fontWeight: '600',
+  },
 });
 
 CourseCard.displayName = 'CourseCard';
