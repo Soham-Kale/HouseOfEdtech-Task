@@ -12,8 +12,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LegendList } from '@legendapp/list/react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
+import { Image } from 'react-native';
 import useCourseStore from '@/store/courseStore';
+import { mapCategory } from '@/utils/categoryMap';
 import useAuthStore from '@/store/authStore';
 import CourseCard from '@/components/CourseCard';
 import { Course } from '@/types';
@@ -89,8 +90,7 @@ export default function CoursesScreen() {
             <Image
               source={{ uri: user.avatar }}
               style={styles.userAvatar}
-              contentFit="cover"
-              cachePolicy="memory-disk"
+              resizeMode="cover"
             />
           ) : (
             <View style={styles.userAvatarPlaceholder}>
@@ -134,7 +134,7 @@ export default function CoursesScreen() {
                 style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}
               >
                 <Text style={[styles.chipText, active ? styles.chipTextActive : styles.chipTextInactive]}>
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  {cat === 'All' ? 'All' : mapCategory(cat)}
                 </Text>
               </TouchableOpacity>
             );

@@ -10,8 +10,9 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
+import { Image } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { mapCategory } from '@/utils/categoryMap';
 import { Ionicons } from '@expo/vector-icons';
 import useCourseStore from '@/store/courseStore';
 import { Course } from '@/types';
@@ -82,13 +83,12 @@ export default function CourseDetailScreen() {
           <Image
             source={{ uri: course.thumbnail }}
             style={styles.heroImage}
-            contentFit="cover"
-            cachePolicy="memory-disk"
+            resizeMode="cover"
           />
           {/* Dark overlay strip at bottom */}
           <View style={styles.heroOverlay}>
             <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>{course.category}</Text>
+              <Text style={styles.categoryText}>{mapCategory(course.category)}</Text>
             </View>
             <TouchableOpacity
               onPress={handleBookmark}
@@ -122,7 +122,7 @@ export default function CourseDetailScreen() {
               ))}
             </View>
             <Text style={styles.ratingNum}>{course.rating?.toFixed(1)}</Text>
-            <Text style={styles.ratingCount}>({course.stock} reviews)</Text>
+            <Text style={styles.ratingCount}>({course.stock?.toLocaleString()} students enrolled)</Text>
           </View>
 
           {/* Price */}
@@ -143,8 +143,7 @@ export default function CourseDetailScreen() {
             <Image
               source={{ uri: course.instructor?.image || 'https://i.pravatar.cc/80' }}
               style={styles.instructorAvatar}
-              contentFit="cover"
-              cachePolicy="memory-disk"
+              resizeMode="cover"
             />
             <View style={{ flex: 1 }}>
               <Text style={styles.instructorName}>{instructorName}</Text>
@@ -166,7 +165,7 @@ export default function CourseDetailScreen() {
           <View style={styles.statsRow}>
             {[
               { icon: 'layers-outline' as const, label: 'Lessons', value: String(course.stock) },
-              { icon: 'ribbon-outline' as const, label: 'Brand', value: course.brand || 'N/A' },
+              { icon: 'ribbon-outline' as const, label: 'Publisher', value: course.brand || 'N/A' },
               { icon: 'time-outline' as const, label: 'Duration', value: '~4h' },
             ].map(({ icon, label, value }) => (
               <View key={label} style={styles.statCard}>
