@@ -1,16 +1,17 @@
 import React, { memo, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
-import { Image } from 'expo-image';
+import { View, Text, TouchableOpacity, Pressable, StyleSheet, Image, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Course } from '@/types';
 import useCourseStore from '@/store/courseStore';
+import { mapCategory } from '@/utils/categoryMap';
 
 interface Props {
   course: Course;
 }
 
 const CourseCard = memo(({ course }: Props) => {
+  const { width: screenWidth } = useWindowDimensions();
   const toggleBookmark = useCourseStore((s) => s.toggleBookmark);
 
   const handleBookmark = useCallback(
@@ -40,15 +41,13 @@ const CourseCard = memo(({ course }: Props) => {
       <View style={styles.imageContainer}>
         <Image
           source={{ uri: course.thumbnail }}
-          style={styles.image}
-          contentFit="cover"
-          transition={300}
-          cachePolicy="memory-disk"
+          style={{ width: screenWidth - 40, height: 200 }}
+          resizeMode="cover"
         />
 
         {/* Category badge — bottom-left */}
         <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{course.category}</Text>
+          <Text style={styles.categoryText}>{mapCategory(course.category)}</Text>
         </View>
 
         {/* Bookmark — top-right */}
@@ -87,8 +86,7 @@ const CourseCard = memo(({ course }: Props) => {
           <Image
             source={{ uri: course.instructor?.image || 'https://i.pravatar.cc/40' }}
             style={styles.instructorAvatar}
-            contentFit="cover"
-            cachePolicy="memory-disk"
+            resizeMode="cover"
           />
           <Text style={styles.instructorName} numberOfLines={1}>
             {instructorName}
@@ -120,10 +118,6 @@ const styles = StyleSheet.create({
   imageContainer: {
     height: 200,
     position: 'relative',
-  },
-  image: {
-    width: '100%',
-    height: 200,
   },
   categoryBadge: {
     position: 'absolute',
